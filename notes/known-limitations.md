@@ -23,6 +23,38 @@ event:
 
 This pattern — every element must justify its inclusion — should generalize beyond analytics to any structured output task.
 
+**Added to workflow:** `schema_events_must_include` now requires event_name, trigger, properties, decision_supported, and privacy_classification for every event.
+
+## Pseudonymous vs anonymous classification gap
+
+Skeptic caught that hashed user IDs were treated as anonymous when they are actually pseudonymous and potentially linkable. This is a common privacy error that the framework needs to handle explicitly.
+
+**Mitigation added:**
+- Required `privacy_classification` field on every schema element: anonymous | pseudonymous | personal | restricted
+- Grudge recorded: "Pseudonymous data classified as anonymous"
+
+**Remaining gap:** No general privacy classification schema beyond analytics workflows. Should be a cross-cutting concern for any task handling user data.
+
+## Abandonment as raw event vs derived metric
+
+Client-side abandonment events are noisy because they require timeout logic or session inference. Skeptic correctly identified that abandonment should be a derived metric, not a raw client event, unless explicitly justified.
+
+**Mitigation added:** Added constraint to workflow: "Abandonment events must be derived metrics, not raw client events"
+
+## High-cardinality property risk
+
+In small B2B segments, role, company size, industry, and region can become identifying when combined. This is a re-identification risk that goes beyond simple PII blocking.
+
+**Mitigation added:** Added constraint: "High-cardinality firmographic properties require review before inclusion"
+
+## Configurable steps vs hardcoded assumptions
+
+Skeptic caught that the onboarding schema assumed a linear funnel with distinct steps. Real onboarding flows may be branching, adaptive, or single-page. Onboarding steps must be a configurable registry, not hardcoded in event logic.
+
+**Mitigation added:** Added constraint: "Onboarding steps must be configurable (registry, not hardcoded)"
+
+**General principle:** Any schema that describes a domain with variable structure must treat structural elements as configurable, not assumed.
+
 ## Composition model is underspecified
 
 The current operating loop is linear: Scout → Steward → Tinker → Steward → Skeptic. Real work often requires:

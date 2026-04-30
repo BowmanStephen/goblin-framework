@@ -20,3 +20,12 @@
   source: "Onboarding analytics schema design run"
   date: "2026-04-30"
   expires: never
+
+- title: "Pseudonymous data classified as anonymous"
+  what_failed: "Schema used hashed user_id treated as anonymous data when it is actually pseudonymous and potentially linkable"
+  why_it_failed: "Assumption that hashing removes identifiability — it does not, depending on generation and storage"
+  detection: "Any identifier that can be linked back to a person, even through hashing, is pseudonymous not anonymous"
+  prevention: "All identifiers must include privacy_classification field. Hashed IDs must be labeled pseudonymous, never anonymous. Require privacy/legal review for any identifier usage"
+  source: "Onboarding analytics schema Skeptic review"
+  date: "2026-04-30"
+  expires: never

@@ -1,7 +1,8 @@
-# Analytics Event Schema Design (Workflow v0.1)
+# Analytics Event Schema Design (Workflow v0.2)
 
 # Stresses ambiguity, over-production, and scope creep.
 # No clear source of truth. Easy to over-instrument. Privacy risk.
+# v0.2: Skeptic revisions — pseudonymous data, configurable steps, derived metrics, property review
 
 name: onboarding-analytics-schema-design
 description: >
@@ -31,6 +32,9 @@ offering:
     - "Must comply with GDPR and CCPA"
     - "Must not define PII-adjacent fields without explicit consent gating"
     - "Schema must be extensible but start minimal"
+    - "Hashed identifiers are pseudonymous data, not anonymous data"
+    - "Abandonment events must be derived metrics, not raw client events"
+    - "High-cardinality firmographic properties require review"
   do_not_do:
     - implement tracking code
     - select an analytics vendor
@@ -42,6 +46,7 @@ offering:
     - "Each event maps to a decision it supports"
     - "Privacy boundaries are explicit"
     - "Naming conventions are consistent and documented"
+    - "Every event includes: name, trigger, properties, decision_supported, privacy_classification"
   budget:
     tokens: null
     time_minutes: null
@@ -67,7 +72,25 @@ blocked_scope:
   - "Deploy instrumentation"
   - "Define more events than necessary for first iteration"
 
-# ── Goblin Assignments ───────────────────────────────────────────────────────
+# ── Schema Event Requirements ──────────────────────────────────────────────
+
+# Every event in the schema MUST include these fields:
+schema_events_must_include:
+  - event_name           # domain.action format
+  - trigger              # what causes this event to fire
+  - properties           # what data is collected
+  - decision_supported   # what product decision this enables
+  - privacy_classification  # anonymous | pseudonymous | personal | restricted
+
+# Additional rules derived from Skeptic review:
+schema_rules:
+  - "Pseudonymous identifiers must be labeled as such, never as anonymous"
+  - "Abandonment is a derived metric unless explicitly defined otherwise"
+  - "Onboarding steps must be configurable (registry, not hardcoded)"
+  - "High-cardinality firmographic properties require review before inclusion"
+  - "Property count limits must be paired with allowed types and enum constraints"
+
+# ── Goblin Assignments ─────────────────────────────────────────────────────
 
 steps:
   - goblin: scout
@@ -89,6 +112,8 @@ steps:
     description: >
       Design a minimal analytics event schema. Prefer minimal viable output
       over complete coverage. Every event must map to a decision it supports.
+      Every event must include: event_name, trigger, properties,
+      decision_supported, privacy_classification.
       Define naming conventions, privacy boundaries, and consent gating.
     produces: tinker_artifact
     feed_into: [steward_2]
@@ -100,6 +125,7 @@ steps:
       - Propose more events than necessary
       - Define PII-adjacent fields without consent gating
       - Select vendors or tools
+      - Label pseudonymous data as anonymous
     produces: enforcement_report
     checks: tinker_output
 
@@ -109,10 +135,12 @@ steps:
       Push back on any event that doesn't map to a clear decision.
       Ensure consent gating is explicitly defined, not assumed.
       Restrict free-text fields that could collect PII.
+      Verify pseudonymous data is correctly classified.
+      Check for high-cardinality property risks.
     produces: skeptic_review
     feed_into: [final]
 
-# ── Expected Outputs ─────────────────────────────────────────────────────────
+# ── Expected Outputs ────────────────────────────────────────────────────────
 
 expected_outputs:
   scout:
@@ -162,12 +190,18 @@ expected_outputs:
       - hidden_risks
       - recommendations
       - required_changes
+      - approved_scope
+      - blocked_scope
 
 # ── Success Criteria for This Workflow ──────────────────────────────────────
 
 workflow_success_criteria:
   - "No output attempted implementation or vendor selection"
-  - "Every event maps to a product decision"
+  - "Every event has event_name, trigger, properties, decision_supported, privacy_classification"
+  - "Pseudonymous data is correctly classified (not labeled anonymous)"
+  - "Abandonment is a derived metric unless explicitly justified"
+  - "Onboarding steps are configurable, not hardcoded"
+  - "High-cardinality properties are flagged for review"
   - "Privacy and consent boundaries are explicit, not assumed"
   - "Schema starts minimal — no more events than necessary"
   - "Free-text fields restricted to enums where PII risk exists"
