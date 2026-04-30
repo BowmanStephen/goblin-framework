@@ -1,0 +1,45 @@
+# Ledger Schema (v0.1)
+
+# Structure for run tracking. Every Goblin workflow writes a ledger entry.
+
+task_id: ""          # Unique identifier for the run
+timestamp: ""       # ISO 8601 timestamp of run start
+workflow: ""         # Name of the workflow executed
+task: ""             # Task description (from offering)
+
+offering_summary:
+  permissions: []   # Actions the goblin was authorized to perform
+  constraints_count: 0  # Number of constraints
+  do_not_do_count: 0    # Number of prohibitions
+  risk_level: ""    # low | medium | high
+
+scope:
+  approved: []      # Approved scope items
+  blocked: []       # Blocked scope items
+
+goblins: []         # List of goblin results
+  # Each entry:
+  #   name: ""
+  #   role: ""
+  #   status: cleared | blocked | skipped_alpha | completed
+  #   violations: []
+  #   timestamp: ""
+
+decisions: []       # Key decisions made during the run
+  # Each entry:
+  #   decision: ""
+  #   rationale: ""
+
+tools_used: []       # Tools invoked during the run
+  # Each entry:
+  #   tool: ""
+  #   purpose: ""
+  #   result: ""
+
+cost: null           # Cost tracking (null until implemented)
+  # tokens: 0
+  # time_minutes: 0.0
+  # cost_usd: 0.0
+
+errors: []           # Violations or errors encountered
+final_status: ""     # completed | blocked

@@ -14,7 +14,7 @@ requires_approval:
   - external_api_calls_with_side_effects  # POST, PUT, DELETE to external services
   - publishing_or_sending_messages     # Any outbound communication
   - installing_packages                # pip, npm, apt, etc.
-  - executing_shell_commands            # Any shell/subprocess call
+  - executing_shell_commands           # Any shell/subprocess call
 
 # Enforcement rules
 enforcement:

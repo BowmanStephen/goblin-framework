@@ -1,31 +1,65 @@
 # Grudge Book (v0.1)
 
-# A grudge is a recorded failure with instructions to avoid repeating it.
-# Grudges are loaded into goblin context to prevent recurring mistakes.
-
-- title: "Premature repository push from design mode"
-  what_failed: "Agent initialized, committed, and attempted to push repo changes before review"
-  why_it_failed: "The request was interpreted as execution instead of design"
-  detection: "Any git init, commit, push, deploy, or external action before explicit approval"
-  prevention: "Require Steward approval before irreversible or external actions"
-  source: "Goblin Framework first repo build session"
-  date: "2026-04-30"
-  expires: never
+# Grudges are memory of past failures. They make future enforcement context-aware.
+# Each grudge records what went wrong, what should have happened, and how to detect it.
 
 - title: "Tinker over-production on ambiguous tasks"
-  what_failed: "Tinker defined a full event schema when only a minimal viable set was needed"
-  why_it_failed: "No minimality constraint and no negative scope in the offering packet"
-  detection: "Any time Tinker produces more elements than the task explicitly requires, especially on ambiguous tasks with no source of truth"
-  prevention: "Add minimality constraint to Tinker: prefer minimal viable output over complete coverage. Add do_not_do field to offering packet. Require decision_supported mapping for every element"
-  source: "Onboarding analytics schema design run"
-  date: "2026-04-30"
-  expires: never
+  date: 2026-04-29
+  what_happened: >
+    Tinker was given an ambiguous task ("design a token drift system")
+    and produced a complete implementation instead of a design document.
+    The offering specified "propose designs" but Tinker interpreted it as
+    "build the thing."
+  what_should_have_happened: >
+    Tinker should have recognized ambiguity as a signal to stop and surface
+    an approval request, not to fill in the gaps with assumptions.
+    Production before approval is a hard boundary.
+  detection: >
+    Output contains implementation code or deployment steps when
+    the offering only permits design or proposal.
+    Check for: code blocks, deploy commands, production references
+    when permissions only include read, review, or propose actions.
+  enforcement: >
+    If offering permissions include only design/proposal actions,
+    any output containing implementation is blocked.
+    Steward should flag code blocks, CLI commands, or deployment steps
+    as over-production violations.
+  severity: high
 
-- title: "Pseudonymous data classified as anonymous"
-  what_failed: "Schema used hashed user_id treated as anonymous data when it is actually pseudonymous and potentially linkable"
-  why_it_failed: "Assumption that hashing removes identifiability — it does not, depending on generation and storage"
-  detection: "Any identifier that can be linked back to a person, even through hashing, is pseudonymous not anonymous"
-  prevention: "All identifiers must include privacy_classification field. Hashed IDs must be labeled pseudonymous, never anonymous. Require privacy/legal review for any identifier usage"
-  source: "Onboarding analytics schema Skeptic review"
-  date: "2026-04-30"
-  expires: never
+- title: "Scope expansion during design mode"
+  date: 2026-04-29
+  what_happened: >
+    Tinker was asked to design a token drift system for buttons.
+    It also designed drift for colors, spacing, and typography — expanding
+    the scope beyond the declared territory.
+  what_should_have_happened: >
+    Tinker should have stayed within declared territory.
+    If the offering says "buttons," the scope is buttons.
+    Expanding to other components requires a new offering.
+  detection: >
+    Output references systems, components, or domains
+    not listed in the offering's territory.
+    Check for mentions of things outside declared scope.
+  enforcement: >
+    Steward compares output references to offering territory.
+    Any reference outside territory is flagged as scope expansion.
+  severity: high
+
+- title: "Pseudonymous data labeled as anonymous"
+  date: 2026-04-30
+  what_happened: >
+    Tinker proposed an analytics schema that labeled hashed user IDs
+    as "anonymous data." Hashed identifiers are pseudonymous, not anonymous.
+    This misclassification hides a privacy risk.
+  what_should_have_happened: >
+    Hashed or salted identifiers should be labeled as pseudonymous.
+    Anonymity requires irreversibility — hashing is reversible
+    with sufficient effort.
+  detection: >
+    Output labels hashed, salted, or encoded identifiers as
+    "anonymous" or "anonymized." Check for privacy classifications
+    that downgrade pseudonymous data to anonymous.
+  enforcement: >
+    Steward flags any privacy classification where pseudonymous
+    data is labeled as anonymous. Block and require reclassification.
+  severity: critical
