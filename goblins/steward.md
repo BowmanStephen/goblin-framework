@@ -126,7 +126,7 @@ Steward runs as a separate pass, not as part of another goblin. It is not a prom
 
 Wards defined in prompts (like "You must not perform real-world actions") are behavioral. They depend on the model following instructions.
 
-Steward's checks are mechanical. They run regardless of what the model "intends." They carch violations that behavioral constraints miss.
+Steward's checks are mechanical. They run regardless of what the model "intends." They catch violations that behavioral constraints miss.
 
 The framework needs both:
 - Behavioral constraints in goblin prompts (prevent intent)
