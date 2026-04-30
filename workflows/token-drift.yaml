@@ -1,0 +1,164 @@
+# Token Drift System Design (Workflow v0.1)
+
+# A complete Goblin workflow for detecting and preventing design system token drift.
+# Demonstrates Scout → Steward → Tinker → Steward → Skeptic with enforced scope.
+
+name: token-drift-system-design
+description: >
+  Design a system to detect token drift across Figma, token source of truth,
+  and production usage. Propose a safe migration strategy. Prevent drift going forward.
+
+# ── Offering Packet ──────────────────────────────────────────────────────────
+
+offering:
+  task: >
+    Design a system to detect token drift across Figma, token source of truth,
+    and production usage. Propose a safe migration strategy. Prevent drift going forward.
+  territory: >
+    Design system repo (tokens + components), Figma library,
+    frontend app consuming tokens via JSON
+  context: >
+    Over time, inconsistencies have accumulated between Figma tokens,
+    design system token JSON, and actual usage in the app.
+    ~300 tokens, ~120 components, multiple teams contributing.
+  permissions:
+    - read_design_tokens
+    - read_component_code
+    - suggest_changes
+  constraints:
+    - "Cannot break existing UI"
+    - "Cannot rename tokens without migration support"
+    - "Cannot manually audit entire codebase"
+  success_criteria:
+    - "No visual regressions in production"
+    - "Clear mapping of canonical tokens vs deprecated tokens"
+    - "Automated or semi-automated detection of inconsistencies"
+    - "Repeatable workflow (not one-time cleanup)"
+  budget:
+    tokens: null
+    time_minutes: null
+    cost_usd: null
+  risk_level: medium
+  approval_required:
+    - "Any CI changes affecting developer workflow"
+    - "Defining canonical token source"
+    - "Visual regression tooling adoption"
+
+# ── Scope Enforcement ───────────────────────────────────────────────────────
+
+# Steward derives these from the offering's permissions and approval_required.
+# These are the hard boundaries the workflow operates within.
+
+approved_scope:
+  - "Read design tokens from specified sources"
+  - "Analyze component code for hardcoding patterns"
+  - "Produce drift detection reports"
+  - "Propose migration strategies as drafts"
+  - "Suggest changes without implementing them"
+
+blocked_scope:
+  - "Push changes to any repository"
+  - "Modify Figma files or design system source"
+  - "Deploy anything to production"
+  - "Send notifications to external services"
+  - "Execute file writes outside the declared territory"
+  - "Rename or delete tokens"
+
+# ── Goblin Assignments ─────────────────────────────────────────────────────
+
+steps:
+  - goblin: scout
+    description: >
+      Gather context on the current state of token drift.
+      Identify which sources exist, what's missing, and what assumptions
+      need validation before designing the system.
+    produces: context_report
+    feed_into: [tinker]
+
+  - goblin: steward
+    description: >
+      First enforcement pass. Verify Scout stayed within territory
+      and did not attempt any blocked actions. Derive approved_scope
+      and blocked_scope from the offering.
+    produces: enforcement_report
+    checks: scout_output
+
+  - goblin: tinker
+    description: >
+      Design the token drift detection and prevention system.
+      Propose architecture, migration strategy, and CI guardrails.
+      All outputs are drafts — no execution permitted.
+    produces: tinker_artifact
+    feed_into: [steward, skeptic]
+
+  - goblin: steward
+    description: >
+      Second enforcement pass. Verify Tinker did not execute real-world
+      actions, did not exceed scope, and surfaced all approval-requiring
+      actions in approval_requests.
+    produces: enforcement_report
+    checks: tinker_output
+
+  - goblin: skeptic
+    description: >
+      Review Tinker's proposed system for over-engineering, hidden risks,
+      and implicit permission assumptions. Reduce complexity where possible.
+      Constrain the rollout approach.
+    produces: skeptic_review
+    feed_into: [final]
+
+# ── Expected Outputs ────────────────────────────────────────────────────────
+
+expected_outputs:
+  scout:
+    format: yaml
+    fields:
+      - information_found
+      - information_missing
+      - assumptions_needing_validation
+      - risks
+
+  steward_enforcement_1:
+    format: yaml
+    fields:
+      - enforcement_result: cleared | blocked
+      - approved_scope
+      - blocked_scope
+      - violations
+
+  tinker:
+    format: yaml
+    fields:
+      - understanding
+      - approach_options
+      - chosen_approach
+      - proposed_solution
+      - assumptions
+      - open_questions
+      - risks
+      - approval_requests
+
+  steward_enforcement_2:
+    format: yaml
+       fields:
+      - enforcement_result: cleared | blocked
+      - violations
+      - scope_check
+
+  skeptic:
+    format: yaml
+    fields:
+      - verdict: approve | approve_with_constraints | block
+      - critical_issues
+      - hidden_risks
+      - recommendations
+      - required_changes
+
+# ── Success Criteria for This Workflow ──────────────────────────────────────
+
+workflow_success_criteria:
+  - "No output attempted execution of blocked actions"
+  - "All approval-requiring actions surfaced in approval_requests"
+  - "Skeptic identified over-engineering risks and reduced scope"
+  - "Final output is a proposal, not a deployment plan"
+  - "Ledger captures all decisions with rationale"
