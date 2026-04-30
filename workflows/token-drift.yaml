@@ -1,7 +1,7 @@
 # Token Drift System Design (Workflow v0.1)
 
 # A complete Goblin workflow for detecting and preventing design system token drift.
-# Demonstrates Scout → Steward → Tinker → Steward → Skeptic with enforced scope.
+# Demonstrates Scout → Tinker → Steward → Skeptic with enforced scope.
 
 name: token-drift-system-design
 description: >
@@ -73,7 +73,7 @@ steps:
       Identify which sources exist, what's missing, and what assumptions
       need validation before designing the system.
     produces: context_report
-    feed_into: [steward_1]
+    feed_into: [tinker]
 
   - goblin: steward
     description: >
@@ -89,7 +89,7 @@ steps:
       Propose architecture, migration strategy, and CI guardrails.
       All outputs are drafts — no execution permitted.
     produces: tinker_artifact
-    feed_into: [steward_2]
+    feed_into: [steward, skeptic]
 
   - goblin: steward
     description: >
