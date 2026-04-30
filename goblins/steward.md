@@ -41,16 +41,15 @@ Steward produces two scope declarations for every task:
 
 ```yaml
 approved_scope:
-  - "read design tokens from specified repo"
-  - "analyze component code for hardcoding"
-  - "produce a drift report"
+  - read design tokens from specified repo
+  - analyze component code for hardcoding
+  - produce a drift report
 
 blocked_scope:
-  - "push changes to any repository"
-  - "modify Figma files"
-  - "deploy anything to production"
-  - "send notifications to external services"
-"
+  - push changes to any repository
+  - modify Figma files
+  - deploy anything to production
+  - send notifications to external services
 ```
 
 These are derived from the offering packet's `permissions` and `approval_required` fields, converted into explicit allow/deny lists.
@@ -70,22 +69,44 @@ For each goblin output, Steward checks:
 If any check fails, Steward blocks the output and produces an enforcement report:
 
 ```yaml
-enforcement_result: blocked
+status: blocked
 violations:
-  - rule: "no external actions in design mode"
-    detail: "Tinker attempted to push files to GitHub"
+  - rule: no external actions in design mode
+    detail: Tinker attempted to push files to GitHub
     severity: critical
-    action: "Output blocked. Execution halted."
+    action: Output blocked. Execution halted.
 ```
 
 If all checks pass:
 
 ```yaml
-enforcement_result: cleared
-approved_scope: [...]
-blocked_scope: [...]
+status: cleared
+approved_scope:
+  - read design tokens from specified repo
+  - analyze component code for hardcoding
+  - produce a drift report
+blocked_scope:
+  - push changes to any repository
+  - modify Figma files
+  - deploy anything to production
+  - send notifications to external services
 notes: []
 ```
+
+---
+
+## Steward Runs Twice
+
+Steward executes at two points in the pipeline:
+
+1. **After each producer goblin** — catches structural violations (scope creep, permission overreach, missing approval requests)
+2. **Before any execution or handoff** — final gate ensuring no blocked actions proceed
+
+This means:
+- After Scout → Steward checks territory and access
+- After Tinker → Steward checks scope, permissions, and approval surfacing
+- After Skeptic → Steward checks that Skeptic's constraints don't introduce blocked actions
+- Before execution → Steward is the final gate
 
 ---
 
@@ -105,7 +126,7 @@ Steward runs as a separate pass, not as part of another goblin. It is not a prom
 
 Wards defined in prompts (like "You must not perform real-world actions") are behavioral. They depend on the model following instructions.
 
-Steward's checks are mechanical. They run regardless of what the model "intends." They catch violations that behavioral constraints miss.
+Steward's checks are mechanical. They run regardless of what the model "intends." They carch violations that behavioral constraints miss.
 
 The framework needs both:
 - Behavioral constraints in goblin prompts (prevent intent)
@@ -119,4 +140,4 @@ A goblin that ignores its prompt is a bug. Steward is the backstop.
 
 - Steward can be implemented as a validation function, a prompt, or a human reviewer. The key is that it runs mechanically, not optionally.
 - In automated systems, Steward should be a code layer that validates outputs against ward rules before passing them to the next stage.
-- In manual systems, Steward is a checklist that a human runs before approving execution.
+- In manual systems, Steward is a checklist that a human runs before approving handoff or execution.

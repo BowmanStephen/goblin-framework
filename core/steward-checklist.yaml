@@ -1,0 +1,46 @@
+# Steward Checklist (v0.1)
+
+# This checklist is run mechanically by Steward after each goblin output.
+# It is not behavioral — it is a deterministic gate.
+
+## Territory Check
+- [ ] Did the goblin access any resource outside its declared territory?
+- [ ] Were all file reads, API calls, and data fetches within scope?
+- [ ] Did the goblin reference any system, repo, or dataset not in the offering?
+
+## Permission Check
+- [ ] Were all actions within the offering's permissions list?
+- [ ] Did the goblin use any tool not listed in permissions?
+- [ ] Were any actions taken that require approval without surfacing them?
+
+## Approval Check
+- [ ] Are all actions requiring approval listed in approval_requests?
+- [ ] Did the goblin execute any action that should have been blocked for approval?
+- [ ] Were any approval requests missing or underspecified?
+
+## Constraint Check
+- [ ] Does the output violate any stated constraints?
+- [ ] Were constraints referenced or acknowledged in the output?
+- [ ] Are there implicit constraint violations (e.g., breaking existing UI)?
+
+## Scope Check
+- [ ] Is the output within approved_scope?
+- [ ] Is the output outside blocked_scope?
+- [ ] Did the goblin expand the task beyond its original definition?
+
+## Output Format Check
+- [ ] Does the output follow the expected artifact format?
+- [ ] Are all required fields present?
+- [ ] Is the output parseable (valid YAML/JSON)?
+
+## Result
+
+If any check fails:
+- status: blocked
+- Record all violations with severity
+- Output is not passed to next goblin
+
+If all checks pass:
+- status: cleared
+- Record approved_scope and blocked_scope
+- Output proceeds to next stage

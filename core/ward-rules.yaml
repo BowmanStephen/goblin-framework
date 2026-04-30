@@ -1,0 +1,27 @@
+# Ward Rules (v0.1)
+
+# Hard boundaries — these are ALWAYS enforced
+forbidden:
+  - access_data_outside_territory    # No reading files/data outside declared territory
+  - expose_secrets                    # No outputting API keys, tokens, passwords
+  - destructive_actions_without_approval  # No rm -rf, no DROP TABLE, no force-push
+  - expand_scope_without_approval     # No "while I'm at it, I'll also..."
+  - simulate_permissions              # No pretending you can do things you can't
+
+# Soft boundaries — these require explicit approval
+requires_approval:
+  - file_edits                         # Any write to filesystem
+  - external_api_calls_with_side_effects  # POST, PUT, DELETE to external services
+  - publishing_or_sending_messages     # Any outbound communication
+  - installing_packages                # pip, npm, apt, etc.
+  - executing_shell_commands            # Any shell/subprocess call
+
+# Enforcement rules
+enforcement:
+  - validate_permissions_before_tool_use: true  # Check permissions before every tool call
+  - block_outputs_violating_constraints: true    # Stop output that breaks constraints
+  - require_approval_for_risk_level_high: true    # High-risk tasks always need sign-off
+  - log_all_actions_to_ledger: true               # Record everything
+  - stop_on_violation: true                        # Halt on any ward breach (don't try to recover)
+  - steward_runs_before_skeptic: true             # Structural checks before quality checks
+  - steward_runs_before_execution: true            # Final gate before any real-world action
