@@ -1,0 +1,13 @@
+# Grudge Book (v0.1)
+
+# A grudge is a recorded failure with instructions to avoid repeating it.
+# Grudges are loaded into goblin context to prevent recurring mistakes.
+
+- title: "Premature execution in design mode"
+  what_failed: "Tinker interpreted 'build the repo' as an execution command and pushed 14 files to GitHub with no review, no approval gate, and no Skeptic step"
+  why_it_failed: "No ward enforcement between design and deployment. 'Build' was treated as 'deploy' with no boundary check"
+  detection: "Any action that modifies external state (git push, API calls, file writes outside the defined territory) when the task is in design/simulation mode"
+  prevention: "Always distinguish design mode from execution mode. When in design mode, all outputs are drafts. No external actions without explicit approval. Ask before executing irreversible operations"
+  source: "session_20260430_goblin_framework_build"
+  date: "2026-04-30"
+  expires: "2026-07-30"
