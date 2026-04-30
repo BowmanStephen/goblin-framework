@@ -1,0 +1,15 @@
+# Offering Packet Schema (v0.1)
+
+task: ""                    # What to do — must be specific, not vague
+territory: ""               # Domain: files, repos, datasets, APIs accessible
+context: ""                 # Background information relevant to the task
+permissions: []             # List of allowed actions (e.g., [read_files, write_files, search_web])
+constraints: []             # Rules the output must satisfy
+do_not_do: []               # Explicit negative scope — things this task must NOT do
+success_criteria: []        # How to judge completion
+budget:                     # Resource limits
+  tokens: null              # Max tokens to generate (null = unlimited)
+  time_minutes: null        # Max wall time (null = unlimited)
+  cost_usd: null            # Max cost in USD (null = unlimited)
+risk_level: low             # low | medium | high
+approval_required: []       # Actions requiring human sign-off before execution

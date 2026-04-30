@@ -3,11 +3,20 @@
 # A grudge is a recorded failure with instructions to avoid repeating it.
 # Grudges are loaded into goblin context to prevent recurring mistakes.
 
-- title: "Premature execution in design mode"
-  what_failed: "Tinker interpreted 'build the repo' as an execution command and pushed 14 files to GitHub with no review, no approval gate, and no Skeptic step"
-  why_it_failed: "No ward enforcement between design and deployment. 'Build' was treated as 'deploy' with no boundary check"
-  detection: "Any action that modifies external state (git push, API calls, file writes outside the defined territory) when the task is in design/simulation mode"
-  prevention: "Always distinguish design mode from execution mode. When in design mode, all outputs are drafts. No external actions without explicit approval. Ask before executing irreversible operations"
-  source: "session_20260430_goblin_framework_build"
+- title: "Premature repository push from design mode"
+  what_failed: "Agent initialized, committed, and attempted to push repo changes before review"
+  why_it_failed: "The request was interpreted as execution instead of design"
+  detection: "Any git init, commit, push, deploy, or external action before explicit approval"
+  prevention: "Require Steward approval before irreversible or external actions"
+  source: "Goblin Framework first repo build session"
   date: "2026-04-30"
-  expires: "2026-07-30"
+  expires: never
+
+- title: "Tinker over-production on ambiguous tasks"
+  what_failed: "Tinker defined a full event schema when only a minimal viable set was needed"
+  why_it_failed: "No minimality constraint and no negative scope in the offering packet"
+  detection: "Any time Tinker produces more elements than the task explicitly requires, especially on ambiguous tasks with no source of truth"
+  prevention: "Add minimality constraint to Tinker: prefer minimal viable output over complete coverage. Add do_not_do field to offering packet. Require decision_supported mapping for every element"
+  source: "Onboarding analytics schema design run"
+  date: "2026-04-30"
+  expires: never

@@ -1,0 +1,174 @@
+# Analytics Event Schema Design (Workflow v0.1)
+
+# Stresses ambiguity, over-production, and scope creep.
+# No clear source of truth. Easy to over-instrument. Privacy risk.
+
+name: onboarding-analytics-schema-design
+description: >
+  Design an analytics event schema for a new user onboarding flow.
+  Ambiguous scope, high over-engineering risk, privacy constraints.
+
+# ── Offering Packet ──────────────────────────────────────────────────────────
+
+offering:
+  task: >
+    Design an analytics event schema for tracking a new user onboarding flow.
+    Define what to track, naming conventions, and privacy boundaries.
+  territory: >
+    Product requirements for onboarding, existing analytics infrastructure docs,
+    privacy policy documentation
+  context: >
+    Company is launching a redesigned onboarding flow.
+    No analytics currently exist for onboarding.
+    Multiple stakeholders want "comprehensive tracking" but haven't defined priorities.
+    Privacy regulations (GDPR/CCPA) apply.
+  permissions:
+    - read_product_requirements
+    - read_analytics_docs
+    - review_privacy_policy
+    - propose_schema_designs
+  constraints:
+    - "Must comply with GDPR and CCPA"
+    - "Must not define PII-adjacent fields without explicit consent gating"
+    - "Schema must be extensible but start minimal"
+  do_not_do:
+    - implement tracking code
+    - select an analytics vendor
+    - write production code
+    - access real user data
+    - define more events than needed for first iteration
+  success_criteria:
+    - "Clear event taxonomy with minimum viable set"
+    - "Each event maps to a decision it supports"
+    - "Privacy boundaries are explicit"
+    - "Naming conventions are consistent and documented"
+  budget:
+    tokens: null
+    time_minutes: null
+    cost_usd: null
+  risk_level: medium
+  approval_required:
+    - "Final schema adoption"
+    - "Any tracking that fires before user consent"
+
+# ── Scope Enforcement ───────────────────────────────────────────────────────
+
+approved_scope:
+  - "Design event schema structure"
+  - "Define event naming conventions"
+  - "Define privacy boundaries and consent gating"
+  - "Propose minimum viable event set"
+  - "Map events to product decisions"
+
+blocked_scope:
+  - "Implement tracking code in any language or framework"
+  - "Select or evaluate analytics vendors"
+  - "Access real user data or production systems"
+  - "Deploy instrumentation"
+  - "Define more events than necessary for first iteration"
+
+# ── Goblin Assignments ───────────────────────────────────────────────────────
+
+steps:
+  - goblin: scout
+    description: >
+      Gather context on onboarding flow requirements, existing analytics
+      infrastructure, and privacy constraints. Identify what NOT to track.
+      Define boundaries aggressively — this task has over-tracking risk.
+    produces: context_report
+    feed_into: [steward_1]
+
+  - goblin: steward
+    description: >
+      First enforcement pass. Verify Scout stayed within territory.
+      Confirm Scout defined what NOT to track as well as what to track.
+    produces: enforcement_report
+    checks: scout_output
+
+  - goblin: tinker
+    description: >
+      Design a minimal analytics event schema. Prefer minimal viable output
+      over complete coverage. Every event must map to a decision it supports.
+      Define naming conventions, privacy boundaries, and consent gating.
+    produces: tinker_artifact
+    feed_into: [steward_2]
+
+  - goblin: steward
+    description: >
+      Second enforcement pass. Verify Tinker did not:
+      - Drift into implementation
+      - Propose more events than necessary
+      - Define PII-adjacent fields without consent gating
+      - Select vendors or tools
+    produces: enforcement_report
+    checks: tinker_output
+
+  - goblin: skeptic
+    description: >
+      Review for over-production, privacy gaps, and over-instrumentation.
+      Push back on any event that doesn't map to a clear decision.
+      Ensure consent gating is explicitly defined, not assumed.
+      Restrict free-text fields that could collect PII.
+    produces: skeptic_review
+    feed_into: [final]
+
+# ── Expected Outputs ─────────────────────────────────────────────────────────
+
+expected_outputs:
+  scout:
+    format: yaml
+    fields:
+      - information_found
+      - information_missing
+      - boundaries_defined
+      - what_not_to_track
+      - assumptions_needing_validation
+      - risks
+
+  steward_enforcement_1:
+    format: yaml
+    fields:
+      - status: cleared | blocked
+      - approved_scope
+      - blocked_scope
+      - violations
+
+  tinker:
+    format: yaml
+    fields:
+      - understanding
+      - approach_options
+      - chosen_approach
+      - proposed_solution
+      - event_decision_map
+      - privacy_boundaries
+      - assumptions
+      - open_questions
+      - risks
+      - approval_requests
+
+  steward_enforcement_2:
+    format: yaml
+    fields:
+      - status: cleared | blocked
+      - violations
+      - scope_check
+
+  skeptic:
+    format: yaml
+    fields:
+      - verdict: approve | approve_with_changes | block
+      - critical_issues
+      - hidden_risks
+      - recommendations
+      - required_changes
+
+# ── Success Criteria for This Workflow ──────────────────────────────────────
+
+workflow_success_criteria:
+  - "No output attempted implementation or vendor selection"
+  - "Every event maps to a product decision"
+  - "Privacy and consent boundaries are explicit, not assumed"
+  - "Schema starts minimal — no more events than necessary"
+  - "Free-text fields restricted to enums where PII risk exists"
+  - "Ledger captures all decisions with rationale"

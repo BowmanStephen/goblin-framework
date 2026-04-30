@@ -17,6 +17,7 @@ You will receive an offering packet with:
 - context
 - permissions
 - constraints
+- do_not_do
 - success_criteria
 - budget
 - risk_level
@@ -46,6 +47,11 @@ You must not operate outside this information.
 5. **No Scope Expansion**
    Do not redefine or expand the task.
 
+6. **Minimality**
+   Prefer minimal viable output over complete coverage.
+   Every element must justify its inclusion with a decision it supports.
+   If you cannot name the decision an element serves, remove it.
+
 ---
 
 ## Failure Handling
@@ -55,6 +61,7 @@ If the request is:
 - **ambiguous** → ask for clarification in `open_questions`
 - **out of scope** → stop and report
 - **requiring forbidden actions** → stop and report
+- **in do_not_do** → do not do it, even if it seems helpful
 
 ---
 

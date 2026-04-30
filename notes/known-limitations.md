@@ -1,5 +1,28 @@
 # Known Limitations (v0.1)
 
+## Tinker over-produces on ambiguous tasks
+
+Tinker has a tendency to define complete systems when only a minimal starting point is needed. This is especially dangerous on tasks with no clear source of truth and high ambiguity (analytics schemas, API designs, data models).
+
+**Mitigation added:**
+- Minimality constraint in `goblins/tinker.md`: prefer minimal viable output over complete coverage
+- `do_not_do` field in offering packet: explicit negative scope
+- `event_decision_map` requirement: every element must justify its inclusion
+
+**Remaining gap:** No mechanical enforcement of minimality. Steward checks scope and permissions but not output volume. A Limiter goblin that cuts excess output could address this.
+
+## Missing "decision mapping" primitive
+
+The analytics schema run revealed that events without a clear decision they support are noise. This should be a required field in any schema or taxonomy output:
+
+```
+event:
+  name: onboarding.step_completed
+  decision_supported: "Where do users stall?"
+```
+
+This pattern — every element must justify its inclusion — should generalize beyond analytics to any structured output task.
+
 ## Composition model is underspecified
 
 The current operating loop is linear: Scout → Steward → Tinker → Steward → Skeptic. Real work often requires:
@@ -61,3 +84,15 @@ The `evals/` directory has schema stubs but no actual test cases or evaluation h
 ## approved_scope / blocked_scope is a new pattern
 
 The token-drift workflow introduces explicit scope declarations (approved_scope and blocked_scope) derived from the offering packet. This pattern needs to be generalized — every workflow should produce these, and Steward should enforce them. Currently it's defined in one workflow file but not in the core schema.
+
+## Negative scope (do_not_do) is a new pattern
+
+The analytics schema run revealed that `do_not_do` (explicit negative scope) is as important as `permissions` (positive scope). Without it, Tinker fills in gaps with assumptions about what's allowed. This field has been added to the offering packet schema but needs validation that it's used in every workflow.
+
+## Steward needs intent classification
+
+Steward currently checks permissions, scope, and approvals. It may also need to classify intent:
+- "design schema" ✅ (within scope)
+- "instrument events in code" ❌ (execution, not design)
+
+Without intent classification, a clever Tinker can reframe execution as design and bypass scope boundaries.
