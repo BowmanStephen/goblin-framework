@@ -1,0 +1,74 @@
+# Default Workflow (v0.1)
+#
+# The minimal, generic Goblin loop.
+# Works for any task that has an offering packet.
+# For domain-specific workflows, create a separate YAML in workflows/
+
+name: default
+description: >
+  Generic Goblin workflow: Scout → Steward → Tinker → Steward → Skeptic → Steward → Ledger.
+  Works for any task with an offering packet.
+
+steps:
+  - name: scout
+    goblin: scout
+    description: >
+      Gather context, identify gaps, surface risks.
+      Define what information is available and what's missing.
+      Identify boundary conditions and potential failure modes.
+    produces: context_report
+
+  - name: steward_1
+    goblin: steward
+    description: >
+      First enforcement pass.
+      Verify Scout stayed within territory.
+      Check that Scout defined boundaries and risks, not just opportunities.
+    checks: scout_output
+
+  - name: tinker
+    goblin: tinker
+    description: >
+      Propose solutions and produce drafts within defined scope.
+      Prefer minimal viable output over complete coverage.
+      Surface approval requests for any action requiring sign-off.
+    produces: tinker_artifact
+
+  - name: steward_2
+    goblin: steward
+    description: >
+      Second enforcement pass.
+      Verify Tinker did not:
+      - Drift into implementation
+      - Expand beyond declared scope
+      - Produce more than necessary
+      - Violate do_not_do items
+      - Label pseudonymous data as anonymous
+    checks: tinker_output
+
+  - name: skeptic
+    goblin: skeptic
+    description: >
+      Review for quality, over-production, hidden risks, and scope compliance.
+      Push back on anything that doesn't map to a clear decision.
+      Identify failure modes the producer missed.
+    produces: skeptic_review
+
+  - name: steward_3
+    goblin: steward
+    description: >
+      Final enforcement pass.
+      Verify the complete output:
+      - No scope violations
+      - No blocked actions
+      - All approval requests surfaced
+      - Output format is valid
+      - No grudge pattern violations
+    checks: skeptic_output
+
+  - name: ledger
+    goblin: ledger
+    description: >
+      Record the complete run: actions, decisions, costs, and outcomes.
+      Write structured ledger entry for audit trail.
+    produces: ledger_entry
