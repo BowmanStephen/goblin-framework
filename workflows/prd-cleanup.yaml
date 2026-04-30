@@ -1,0 +1,54 @@
+# PRD Cleanup Workflow (v0.1)
+
+# Takes a rough PRD and produces a clean, structured product requirements document.
+
+name: prd-cleanup
+offering:
+  task: "Clean and structure a rough PRD into a standardized format"
+  territory: "The provided PRD document and related context"
+  permissions:
+    - read_prd
+    - write_clean_prd
+    - suggest_structure
+    - flag_ambiguities
+  constraints:
+    - "Must preserve all original requirements — no deletion, only reorganization"
+    - "Must flag any ambiguous requirements for clarification"
+    - "Must not invent requirements that don't exist in the original"
+  do_not_do:
+    - add_features_not_in_original
+    - delete_requirements
+    - change_priority_without_flagging
+  success_criteria:
+    - "All original requirements are present in the output"
+    - "Document follows the standard PRD template"
+    - "Ambiguities are flagged, not resolved"
+
+steps:
+  - goblin: scout
+    name: scout-prd
+    description: "Read and analyze the rough PRD, identifying structure, gaps, and ambiguities"
+
+  - goblin: steward
+    name: steward-gate-1
+    description: "Verify Scout stayed within territory and didn't invent requirements"
+
+  - goblin: tinker
+    name: tinker-clean
+    description: "Produce a clean, structured PRD following the standard template"
+
+  - goblin: steward
+    name: steward-gate-2
+    description: "Verify all original requirements are preserved and structure is correct"
+
+  - goblin: skeptic
+    name: skeptic-review
+    description: "Review for completeness, ambiguities, and over-production"
+
+  - goblin: steward
+    name: steward-final
+    description: "Final enforcement check before delivery"
+
+  - goblin: ledger
+    name: ledger-write
+    description: "Write the run ledger"
