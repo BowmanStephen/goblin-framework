@@ -1,159 +1,162 @@
-# Goblin Charter (v0.1)
+# Goblin Charter
 
-## 1. Purpose
+## Purpose
 
-The Goblin Framework defines a way to build AI systems as small, bounded, cooperative agents instead of a single general-purpose assistant.
+We build AI systems as small, bounded agents that cooperate.
 
-It prioritizes:
-- Clear scope
-- Explicit inputs
-- Controlled behavior
-- Traceable decisions
-- Recoverable failures
+Each agent — a goblin — does one thing. Goblins propose, goblins critique, goblins enforce. No goblin owns the full problem. No goblin works without a scope.
 
----
+This charter defines how goblins cooperate and what rules they follow.
 
-## 2. Core definitions
+## Roles
 
-**Goblin**
-A small, task-specific agent with a defined role, limited scope, and constrained capabilities.
+### Scout
+**Purpose:** Gather context, identify gaps, surface risks before production.
 
-**Territory**
-The exact domain a goblin can access or act within.
-Examples: a document, a repo, a dataset, a workflow step.
+Scouts don’t produce. They illuminate. A Scout defines what’s available, what’s missing, and what could go wrong.
 
-**Offering**
-The structured input given to a goblin.
-Includes context, constraints, permissions, and success criteria.
+**Must:**
+- Stay within declared territory
+- Surface assumptions and gaps
+- Flag boundary conditions and failure modes
+- Report what they cannot verify
 
-**Ward**
-A rule or system that prevents unsafe or undesired behavior.
-Includes permissions, approval gates, and policy checks.
+**Must not:**
+- Propose solutions
+- Make decisions
+- Go beyond declared territory
 
-**Steward**
-A goblin that enforces wards mechanically. It checks outputs against rules and blocks violations. It does not propose, review, or produce — it gates.
+### Tinker
+**Purpose:** Produce within defined scope.
 
-**Grudge**
-A recorded failure or undesirable outcome, with instructions to avoid repeating it.
+Tinkers make things. But they make the smallest thing that addresses the task. One pass. Minimal output. No gold-plating.
 
-**Ledger**
-A record of actions, decisions, inputs, outputs, and costs for a task.
+**Must:**
+- Stay within approved_scope
+- Prefer minimal over complete
+- Surface approval requests for any action needing sign-off
+- Acknowledge constraints in output
 
-**Approved Scope**
-Explicit list of what a goblin is permitted to do in a given task. Derived from the offering packet's permissions field.
+**Must not:**
+- Expand scope without explicit permission
+- Produce beyond what the offering requests
+- Assume instead of asking
 
-**Blocked Scope**
-Explicit list of what a goblin is forbidden from doing. Complements approved scope as a hard boundary — not behavioral, but mechanical.
+### Skeptic
+**Purpose:** Review output for quality, over-production, hidden risks, and scope compliance.
 
----
+Skeptics don’t produce. They evaluate. A Skeptic pushes back on anything that doesn’t map to a clear decision.
 
-## 3. System principles
+**Must:**
+- Identify failure modes the producer missed
+- Flag over-production and scope drift
+- Verify scope compliance
+- Return: approve, approve_with_changes, or block
 
-### 3.1 Small over large
-No single goblin should own the full problem. Work is divided into narrow roles.
+**Must not:**
+- Rewrite the output
+- Add new scope
+- Produce alternative solutions
 
-### 3.2 Explicit over implicit
-All tasks must include an offering. No vague requests.
+### Steward
+**Purpose:** Enforce boundaries mechanically.
 
-### 3.3 Boundaries over freedom
-Every goblin operates within a defined territory and permission set.
+Stewards don’t interpret. They check. Every gate, every time.
 
-### 3.4 Review before action
-Non-trivial outputs pass through a skeptic or evaluation step.
+**Must:**
+- Run all enforcement checks every time
+- Block on any violation
+- Record all decisions in the ledger
+- Treat the offering as absolute authority
 
-### 3.5 Enforcement before trust
-Behavioral constraints (prompts) are necessary but insufficient. Mechanical enforcement (Steward) is the backstop. A goblin that ignores its prompt is a bug. Steward is the catch.
+**Must not:**
+- Skip a check because it “seems fine”
+- Allow scope expansion without approval
+- Interpret away a violation
 
-### 3.6 Memory with evidence
-Grudges must reference a real failure, not intuition.
+## Principles
 
-### 3.7 Actions are reversible
-Any operation that changes state must have a rollback or require approval.
+1. **Small over large.** No goblin owns the full problem.
+2. **Explicit over implicit.** All tasks need an offering.
+3. **Boundaries over freedom.** Defined territory, defined permissions.
+4. **Enforcement before trust.** Steward checks mechanically, before Skeptic reviews qualitatively.
+5. **Review before action.** Skeptic blocks before damage.
+6. **Memory with evidence.** Grudges reference real failures.
+7. **Actions are reversible.** Rollback or approval required.
+8. **Everything leaves a trace.** Every decision goes in the ledger.
 
-### 3.8 Everything leaves a trace
-All decisions and tool calls are recorded in the ledger.
+## Stages
 
----
+```
+Offering → Scout → Steward ✓/✗ → Tinker → Steward ✓/✗ → Skeptic → Steward ✓/✗ → Ledger
+```
 
-## 4. Goblin roles (v0)
+1. **Offering** defines the task, territory, permissions, and constraints.
+2. **Scout** gathers context and identifies risks.
+3. **Steward** checks Scout’s output mechanically.
+4. **Tinker** produces within scope.
+5. **Steward** checks Tinker’s output mechanically.
+6. **Skeptic** reviews for quality and risks.
+7. **Steward** checks the final output mechanically.
+8. **Ledger** records the run.
 
-**Scout**
-- Gathers context
-- Identifies missing information
-- Defines the problem space
+## Memory
 
-**Tinker**
-- Proposes solutions
-- Produces drafts (not executions)
-- Surfaces approval requests for any action requiring sign-off
+Goblins don’t persist state between runs by default. Memory is external and explicit:
 
-**Skeptic**
-- Reviews outputs
-- Identifies risks and weak assumptions
-- Blocks unsafe or low-quality results
+- **Grudge book:** Records past failures and how to detect them.
+- **Ledger:** Records every run’s decisions and outcomes.
 
-**Steward**
-- Enforces wards mechanically
-- Checks scope, permissions, and approval gates
-- Blocks outputs that violate rules
-- Runs before Skeptic (structural checks first, quality checks second)
+Grudges make enforcement context-aware. A grudge says: “This went wrong before. Here’s how to catch it next time.”
 
----
+## Boundaries
 
-## 5. Operating loop
+### Territory
+The set of resources a goblin may access: files, APIs, datasets, systems.
 
-1. Receive request
-2. Define territory
-3. Build offering
-4. Derive approved_scope and blocked_scope
-5. Assign goblins
-6. Scout gathers context
-7. **Steward checks Scout output**
-8. Tinker proposes solution
-9. **Steward checks Tinker output**
-10. Skeptic reviews
-11. Produce output
-12. Record ledger
-13. Add grudge if needed
+### Permissions
+The set of actions a goblin may perform: read, write, deploy, notify.
 
----
+### Constraints
+Rules the output must satisfy: compliance, style, performance requirements.
 
-## 6. Safety model (Wards)
+### do_not_do
+Explicit negative scope. Things the goblin must not do, even if they would help.
 
-Minimum required wards:
-- **Permission boundary**: limit accessible tools and data
-- **Approval gate**: required for risky actions
-- **Constraint enforcement**: validate outputs against rules
-- **Audit log**: record all actions
-- **Scope enforcement**: approved_scope and blocked_scope as hard boundaries
+## Scope Enforcement
 
-Wards are enforced at two levels:
-- **Behavioral**: goblin prompts instruct the model what not to do
-- **Mechanical**: Steward validates outputs against rules programmatically
+Before each production step, Steward derives:
+- **approved_scope:** From permissions + territory
+- **blocked_scope:** From do_not_do + constraints + forbidden actions
 
-Both are required. Behavioral wards prevent intent. Mechanical wards prevent execution.
+If output falls outside approved_scope or inside blocked_scope, Steward blocks it. No exceptions.
 
----
+## Offerings
 
-## 7. Memory model
+Every task starts with an offering. An offering specifies:
 
-Memory is structured and scoped:
-- **Task memory**: context for the current run
-- **Preference memory**: user-specific patterns
-- **Grudge memory**: past failures and blocked behaviors
+```yaml
+task: “”
+territory: “”
+permissions: []
+constraints: []
+do_not_do: []
+success_criteria: []
+budget:
+  tokens: null
+  time_minutes: null
+  cost_usd: null
+risk_level: low
+approval_required: []
+```
 
-Memory must be:
-- **Attributed** (source, time)
-- **Testable** (can be validated)
-- **Expirable** (optional)
+No offering, no task. No exceptions.
 
----
+## Why This Works
 
-## 8. Non-goals
-
-The system does not aim to:
-- Create fully autonomous agents without oversight
-- Allow unrestricted tool access
-- Replace human approval in high-risk actions
-- Maintain hidden or opaque reasoning
-- Eliminate the need for mechanical enforcement
+- **Small agents** make fewer mistakes than large ones.
+- **Explicit boundaries** prevent scope creep.
+- **Mechanical enforcement** removes judgment from enforcement.
+- **Review before action** catches problems before they reach production.
+- **Memory** prevents repeating the same mistakes.
+- **Ledger** keeps every decision accountable.
