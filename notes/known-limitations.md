@@ -2,7 +2,7 @@
 
 ## Composition model is underspecified
 
-The current operating loop is linear: Scout → Tinker → Skeptic. Real work often requires:
+The current operating loop is linear: Scout → Steward → Tinker → Steward → Skeptic. Real work often requires:
 - Parallel goblins working on different subtasks
 - Iterative loops (Tinker → Skeptic → Tinker revision)
 - Conditional branching (different goblins for different outputs)
