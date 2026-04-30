@@ -1,43 +1,79 @@
 # Design Decisions
 
-## Why "Goblin"?
+## Why Small Agents Over Large Ones
 
-Small, specialized, territorial. The name reinforces the key principle: agents are bounded creatures that own a defined patch of work. Also: memorable names beat generic ones.
+Large language models given a full task tend to: over-produce, expand scope, and make assumptions. The Goblin framework addresses this by bounding every agent.
 
-## Why separation of thinking and acting?
+Each goblin has:
+- **Explicit territory** — what it can access
+- **Explicit permissions** — what it can do
+- **Explicit prohibitions** — what it must not do
+- **Explicit success criteria** — how to know it's done
 
-LLMs that jump straight to output lose traceability. The Think→Plan→Produce→Flag structure gives reviewers (human or Skeptic) something to audit. Every decision has a rationale, not just a result.
+No goblin owns the full problem. Each produces within its cage.
 
-## Why structured output instead of free-form?
+## Why Enforcement Before Trust
 
-Structured output (YAML artifacts) enables:
-- Programmatic validation
-- Automated handoffs between goblins
-- Ledger entries that are machine-parseable
-- Easier testing and evaluation
+Most agent frameworks let the model run free and review afterward. The Goblin framework puts enforcement BEFORE production.
 
-Free-form text is fine for humans. Goblins need contracts.
+- Steward runs after Scout (context gate)
+- Steward runs after Tinker (production gate)
+- Steward runs after Skeptic (review gate)
 
-## Why is budget optional?
+This means Steward can block before damage propagates.
 
-Some tasks genuinely have no budget constraint (internal tooling, quick scripts). Making budget required adds friction for zero gain. Instead, budget defaults to null (unlimited) and goblins are expected to note when they're approaching limits.
+## Why Mechanical Enforcement
 
-## Why is Scout not just "context gathering"?
+Steward doesn't interpret. It doesn't decide if a violation is "okay this time." It checks rules mechanically:
 
-Because context gathering without structure produces information dumps. Scout produces a structured context report that maps directly to an offering packet for Tinker. The output format matters as much as the data.
+- Is the output within approved_scope? ✓/✗
+- Is the output outside blocked_scope? ✓/✗
+- Does the output match a grudge pattern? ✓/✗
 
-## Why is Skeptic a separate goblin and not a system prompt?
+This removes judgment from enforcement and makes violations unambiguous.
 
-System prompts get ignored under pressure. A separate goblin with its own output format, explicit checklist, and blocking authority is harder to bypass. Skeptic doesn't just "consider" safety — it has a verdict field that can stop the pipeline.
+## Why Grudges
 
-## Why YAML for schemas?
+Grudges are context-aware memory of past failures. Instead of adding more rules, grudges say: "This went wrong before. Here's how to catch it."
 
-Human-readable, composable, easy to edit by hand. JSON works too but YAML is friendlier for the offering-packet and workflow files that users will write frequently. The goblins themselves can output in YAML or JSON — the schema is format-agnostic.
+This allows the framework to learn from failures without changing the core rules.
 
-## Merged prompts/ and goblins/ — why separate?
+## Why Ledger
 
-A goblin's role definition (what it is) and its prompt (what it says) serve different purposes. The role definition is documentation and design reference. The prompt is operational. They change on different schedules. You might update a prompt's tone without changing the role definition. Keeping them separate lets you iterate on prompts without losing the design intent.
+Every Goblin workflow run produces a ledger entry. This creates an audit trail:
 
-## Design mode vs execution mode
+- What was requested
+- What was produced
+- What was checked
+- What was blocked
+- Why decisions were made
 
-The first grudge recorded in this framework came from Hermes itself: interpreting "build the repo" as permission to push code to GitHub. This taught us that design and execution must be explicitly distinguished. A goblin in design mode produces drafts — nothing more. Execution requires explicit approval from an orchestrator or human. No goblin should assume it has permission to act in the real world.
+Ledgers make failures traceable and success repeatable.
+
+## Why Offerings Instead of Prompts
+
+An offering is structured, not freeform. It has:
+- task, territory, permissions, constraints, do_not_do, success_criteria, budget, risk_level
+
+This makes the scope machine-checkable. Steward can derive approved_scope and blocked_scope from an offering. A freeform prompt can't be checked this way.
+
+## Why Blocked Scope Includes Inferred Prohibitions
+
+blocked_scope isn't just what the offering says "don't do." It includes:
+
+- Inferred prohibitions from constraints ("must not" → blocked)
+- Forbidden actions from ward rules
+- Action-requiring-approval that wasn't approved
+
+This prevents goblins from finding loopholes in the offering's language.
+
+## Why Minimal Output
+
+Tinker is constrained to produce minimal viable output. Not because more output is bad, but because:
+
+1. Over-production is the most common agent failure
+2. Minimal output is easier to review
+3. Adding is safer than removing
+4. Every extra line is a potential scope violation
+
+The offering defines "minimal." If it says "design one event," that's one event. Not three. Not a system.

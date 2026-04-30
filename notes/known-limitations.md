@@ -1,130 +1,53 @@
-# Known Limitations (v0.1)
+# Known Limitations
 
-## Tinker over-produces on ambiguous tasks
+## Current Limitations (v0.2.0-alpha)
 
-Tinker has a tendency to define complete systems when only a minimal starting point is needed. This is especially dangerous on tasks with no clear source of truth and high ambiguity (analytics schemas, API designs, data models).
+### Runtime
 
-**Mitigation added:**
-- Minimality constraint in `goblins/tinker.md`: prefer minimal viable output over complete coverage
-- `do_not_do` field in offering packet: explicit negative scope
-- `event_decision_map` requirement: every element must justify its inclusion
+- **Steward checks run against offering when no goblin output is available.** In alpha mode, Scout, Tinker, and Skeptic are skipped. Steward falls back to checking the offering packet against itself, which always clears. This will be fixed when LLM goblins are integrated.
 
-**Remaining gap:** No mechanical enforcement of minimality. Steward checks scope and permissions but not output volume. A Limiter goblin that cuts excess output could address this.
+- **check_output_format() is a no-op.** The function exists but performs no validation. It always returns an empty list. Expected output shapes per goblin type need to be defined and enforced.
 
-## Missing "decision mapping" primitive
+- **check_territory() only checks for 7 hardcoded execution keywords.** It does not validate that goblin output stayed within declared territory. A goblin accessing backend APIs while claiming territory as "frontend" would not be caught.
 
-The analytics schema run revealed that events without a clear decision they support are noise. This should be a required field in any schema or taxonomy output:
+- **Grudge matching is fragile.** Keywords are extracted from grudge detection text, filtered by noise words and length, then matched against goblin output. New grudges with short or common detection text can false-positive or false-negative. The `len(k) > 4` filter makes hyphenated single-word grudges impossible to trigger.
 
-```
-event:
-  name: onboarding.step_completed
-  decision_supported: "Where do users stall?"
-```
+- **Inferred blocks are hardcoded in Python.** `schema.py` lines 126-131 add 4 universal blocks ("Deploy to production without explicit approval", etc.) that should come from `ward-rules.yaml` instead. The `ward-rules.yaml` file exists with `forbidden:` and `requires_approval:` lists but the runtime ignores it.
 
-This pattern — every element must justify its inclusion — should generalize beyond analytics to any structured output task.
+- **No LLM integration.** Scout, Tinker, and Skeptic run as skipped steps in alpha mode. The runtime can only execute Steward gates mechanically. There is no mechanism to invoke LLM goblins with offering context.
 
-**Added to workflow:** `schema_events_must_include` now requires event_name, trigger, properties, decision_supported, and privacy_classification for every event.
+- **No prompt template interpolation.** Prompts are static markdown files. There is no code that loads a prompt, injects offering context (task, territory, permissions), and sends it to an LLM.
 
-## Pseudonymous vs anonymous classification gap
+- **Budget fields are validated but not enforced.** `schema.py` checks that budget is a dict, but the runtime never uses it. No token counting, time tracking, or cost accounting. The ledger always writes `"cost": null`.
 
-Skeptic caught that hashed user IDs were treated as anonymous when they are actually pseudonymous and potentially linkable. This is a common privacy error that the framework needs to handle explicitly.
+- **Ledger schema is not validated.** `core/ledger-schema.yaml` defines the expected ledger structure, but `ledger.py` builds the structure in Python without referencing or validating against this schema.
 
-**Mitigation added:**
-- Required `privacy_classification` field on every schema element: anonymous | pseudonymous | personal | restricted
-- Grudge recorded: "Pseudonymous data classified as anonymous"
+- **Workflows embed offering packets.** The `analytics-schema.yaml` file bundles the offering packet AND workflow steps AND scope AND expected outputs. The runtime expects a separate offering packet and workflow, and uses `offering.get("offering", offering)` to unwrap. This is confusing and should be cleaner.
 
-**Remaining gap:** No general privacy classification schema beyond analytics workflows. Should be a cross-cutting concern for any task handling user data.
+- **No rollback mechanism.** Ward rules say "stop_on_violation: true" and the runtime halts. There is no way to resume from a blocked state or roll back partial output.
 
-## Abandonment as raw event vs derived metric
+- **No workflow validation.** `run.py` loads any YAML for workflows. No schema check that required fields (goblin, name) exist. A malformed workflow would crash at runtime.
 
-Client-side abandonment events are noisy because they require timeout logic or session inference. Skeptic correctly identified that abandonment should be a derived metric, not a raw client event, unless explicitly justified.
+### Missing Tests
 
-**Mitigation added:** Added constraint to workflow: "Abandonment events must be derived metrics, not raw client events"
+- No test files exist. Not for Steward, not for schema validation, not for runtime integration. For a deterministic enforcement framework, this is a significant gap.
 
-## High-cardinality property risk
+### Structural
 
-In small B2B segments, role, company size, industry, and region can become identifying when combined. This is a re-identification risk that goes beyond simple PII blocking.
+- **Scout, Skeptic goblin definitions exist but have no runtime behavior.** They're defined in `goblins/scout.md` and `goblins/skeptic.md` but have no executable code path.
 
-**Mitigation added:** Added constraint: "High-cardinality firmographic properties require review before inclusion"
+- **Steward prompt exists but is not loaded by the runtime.** `prompts/steward.prompt.md` is the human-readable guide, not the machine-loaded version.
 
-## Configurable steps vs hardcoded assumptions
+- **prd-cleanup.yaml workflow is untested.** It exists in `workflows/` but hasn't been validated against the runtime.
 
-Skeptic caught that the onboarding schema assumed a linear funnel with distinct steps. Real onboarding flows may be branching, adaptive, or single-page. Onboarding steps must be a configurable registry, not hardcoded in event logic.
+## Design Decisions (Not Limitations)
 
-**Mitigation added:** Added constraint: "Onboarding steps must be configurable (registry, not hardcoded)"
+These are intentional choices, not bugs:
 
-**General principle:** Any schema that describes a domain with variable structure must treat structural elements as configurable, not assumed.
+- **Mechanical over semantic.** Steward checks are keyword-based and deterministic by design. They catch what can be caught with rules, not interpretation. Semantic checks are Skeptic's job.
 
-## Composition model is underspecified
+- **Stop on violation.** When Steward blocks, the workflow halts. No recovery, no partial output. This is intentional — it forces the user to fix the offering or goblin output before proceeding.
 
-The current operating loop is linear: Scout → Steward → Tinker → Steward → Skeptic. Real work often requires:
-- Parallel goblins working on different subtasks
-- Iterative loops (Tinker → Skeptic → Tinker revision)
-- Conditional branching (different goblins for different outputs)
+- **No rollback.** Blocked runs produce a ledger with violations listed. The user reads the ledger, fixes the issue, and re-runs. Resuming mid-workflow would require understanding partial state, which adds complexity without clear benefit.
 
-The token-drift workflow introduces Steward as a separate enforcement pass, which adds structure. But the general composition model (how goblins connect, what triggers which, how loops work) still needs a formal definition.
-
-## Steward is defined but not implemented
-
-Steward is defined as a "mechanical" check but currently exists only as a prompt and a spec. To be truly mechanical, it needs:
-- A code layer that validates outputs against ward rules programmatically
-- JSON Schema validation for output formats
-- Rule-based checks (does the output reference files outside territory? did it call APIs not in permissions?)
-- A blocking mechanism that prevents downstream execution
-
-Until Steward is code, it's behavioral — which is exactly the problem it's supposed to solve.
-
-## Grudge decay is manual
-
-Grudges have an `expires` field but no guidance on:
-- Who reviews expiring grudges
-- What triggers a review
-- Whether expired grudges should be archived or deleted
-
-This needs a lifecycle model.
-
-## Budget enforcement is aspirational
-
-Budget fields exist in the offering packet but there's no enforcement mechanism. A goblin that blows past its token budget has no automatic cutoff. This needs either:
-- A runtime that tracks token usage and halts
-- A post-hoc ledger check that flags budget violations
-
-## Ward enforcement is half behavioral, half mechanical
-
-Ward rules are defined in YAML but enforced in two ways:
-- **Behavioral**: prompts tell goblins not to do things
-- **Mechanical**: Steward checks outputs against rules
-
-The gap is that behavioral enforcement depends on model compliance, which isn't reliable. The more checks that move to Steward (mechanical), the safer the system. The current balance is tilted toward behavioral.
-
-## No orchestration engine
-
-The framework defines roles, schemas, and workflows conceptually but provides no runtime. Currently this is a specification, not a system. To run goblins, you need either:
-- A manual orchestrator (human following the workflow)
-- A Hermes skill or delegate_task that implements the loop
-- A custom orchestration script
-
-## Testing and evaluation are stubs
-
-The `evals/` directory has schema stubs but no actual test cases or evaluation harness. To make this production-ready:
-- Write test cases for each goblin role
-- Build a red-team suite for ward violations
-- Define pass/fail criteria for Skeptic reviews
-- Create automated regression tests for known grudges
-- Add Steward-specific tests that verify mechanical enforcement
-
-## approved_scope / blocked_scope is a new pattern
-
-The token-drift workflow introduces explicit scope declarations (approved_scope and blocked_scope) derived from the offering packet. This pattern needs to be generalized — every workflow should produce these, and Steward should enforce them. Currently it's defined in one workflow file but not in the core schema.
-
-## Negative scope (do_not_do) is a new pattern
-
-The analytics schema run revealed that `do_not_do` (explicit negative scope) is as important as `permissions` (positive scope). Without it, Tinker fills in gaps with assumptions about what's allowed. This field has been added to the offering packet schema but needs validation that it's used in every workflow.
-
-## Steward needs intent classification
-
-Steward currently checks permissions, scope, and approvals. It may also need to classify intent:
-- "design schema" ✅ (within scope)
-- "instrument events in code" ❌ (execution, not design)
-
-Without intent classification, a clever Tinker can reframe execution as design and bypass scope boundaries.
+- **One offering = one run.** Each run takes one offering packet and produces one ledger. There is no batch mode or multi-offering orchestration yet.
