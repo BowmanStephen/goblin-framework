@@ -73,7 +73,7 @@ steps:
       Identify which sources exist, what's missing, and what assumptions
       need validation before designing the system.
     produces: context_report
-    feed_into: [tinker]
+    feed_into: [steward_1]
 
   - goblin: steward
     description: >
@@ -89,7 +89,7 @@ steps:
       Propose architecture, migration strategy, and CI guardrails.
       All outputs are drafts — no execution permitted.
     produces: tinker_artifact
-    feed_into: [steward, skeptic]
+    feed_into: [steward_2]
 
   - goblin: steward
     description: >
@@ -140,7 +140,7 @@ expected_outputs:
 
   steward_enforcement_2:
     format: yaml
-       fields:
+    fields:
       - enforcement_result: cleared | blocked
       - violations
       - scope_check
