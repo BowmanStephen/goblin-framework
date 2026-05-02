@@ -4,6 +4,8 @@ TRICKLE BOT — 16-color indexed pixel art banner
 Strict arcade hardware constraints: no AA, no gradients, no soft lighting.
 Pure programmatic pixel art at 320×180 (classic CPS2 resolution),
 scaled 3× for display (960×540).
+
+Version: 1.1.0
 """
 from PIL import Image
 import os
