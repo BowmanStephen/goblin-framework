@@ -1,0 +1,37 @@
+name: Generate TRICKLE BOT Banner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: pip install Pillow
+
+      - name: Generate banner
+        run: python3 tools/trickle_bot_banner.py
+
+      - name: Move outputs
+        run: |
+          mv /home/hermes/trickle_bot_banner.png ./trickle_bot_banner.png 2>/dev/null || true
+          mv /home/hermes/trickle_bot_banner_3x.png ./trickle_bot_banner_3x.png 2>/dev/null || true
+          # Script writes to /home/hermes/ which won't exist in CI, so patch output path
+        continue-on-error: true
+
+      - name: Generate (CI-safe)
+        run: |
+          sed -i "s|/home/hermes/trickle_bot_banner.png|./trickle_bot_banner.png|g" tools/trickle_bot_banner.py
+          sed -i "s|/home/hermes/trickle_bot_banner_3x.png|./trickle_bot_banner_3x.png|g" tools/trickle_bot_banner.py
+          python3 tools/trickle_bot_banner.py
+
+      - name: Commit outputs
+        run: |
+          git config user.name "Hermes Agent"
+          git config user.email "hermes@bowman.dev"
+          git add trickle_bot_banner.png trickle_bot_banner_3x.png
+          git commit -m "art: regenerate TRICKLE BOT banner [skip ci]" || echo "No changes"
+          git push
